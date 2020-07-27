@@ -7,7 +7,8 @@ import time
 
 import os
 
-assert os.sys.argv[1] == '--output' and len(os.sys.argv) == 3, 'requires a specified output folder with --output parameter'
+assert os.sys.argv[1] == '--directory' and len(os.sys.argv) == 3, 'requires a specified output folder with --directory parameter'
+directory = os.sys.argv[2]
 
 # this shared variable is not taken advantage of by the distributed
 # Spark nodes, but is useful for Python-level scripts
@@ -22,7 +23,6 @@ def http_get(url):
         response_cache[url] = counties_list_html
         
         return response_cache[url]
-
 
 ## -- WIKIPEDIA UTILITIES --
 
@@ -42,7 +42,7 @@ def wikipedia_standard_url(title):
 #     return "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title)
 
 def wikipedia_counties_titles():
-    soup = BeautifulSoup(http_get(counties_list_url))
+    soup = BeautifulSoup(http_get(counties_list_url), 'html.parser')
     
     rows = soup.select('.wikitable.sortable tbody tr')
     anchors = sum([row.select('td a')[:1] for row in rows], [])
@@ -140,12 +140,12 @@ sc = spark.sparkContext
 counties_list_url = "https://en.wikipedia.org/wiki/List_of_United_States_counties_and_county_equivalents"
 
 
-if not os.path.exists(os.sys.argv[2]):
-    os.makedirs(os.sys.argv[2])
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
 ## -- parse the communities from each county --
 
-if not os.path.exists(f'{os.sys.argv[2]}/counties_communities_all.txt'):
+if not os.path.exists(f'{directory}/counties_communities_all.txt'):
     titles_all = wikipedia_counties_titles()
 
     counties_export_text = (sc.parallelize(titles_all)
@@ -159,7 +159,5 @@ if not os.path.exists(f'{os.sys.argv[2]}/counties_communities_all.txt'):
 
     communities_all = list(communities_all.map(set).reduce(set.union))
 
-    with open(f'{os.sys.argv[2]}/counties_communities_all.txt', 'w') as file:
+    with open(f'{directory}/counties_communities_all.txt', 'w') as file:
         file.write("\n".join(communities_all))
-
-print("Done.")
