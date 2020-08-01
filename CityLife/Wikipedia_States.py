@@ -202,7 +202,7 @@ parameters = [
 ]
 
 
-with open(f'{os.sys.argv[2]}/counties_communities_all.txt', 'r') as file:
+with open(f'{directory}/counties_communities_all.txt', 'r') as file:
     communities_data = file.read()
     
 communities_current = set(communities_data.replace('_', ' ').split('\n'))
@@ -228,8 +228,10 @@ combined = list(communities_current.union(state_communities_all))
 print('total:', len(combined))
 
 
+## -- write list of titles in partitions for https://en.wikipedia.org/wiki/Special:Export
+
 index = 0
-partition_size = 20000
+partition_size = 30000
 while partition := combined[index:index+partition_size]:
     actual_size = len(partition)
     with open(f'{directory}/partition--{index:06.0f}--{index+actual_size-1:06.0f}', 'w') as file:
