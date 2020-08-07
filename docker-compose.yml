@@ -1,5 +1,5 @@
 
-version: '3'
+version: "3"
 
 services:
     interface:
@@ -7,9 +7,9 @@ services:
         ports:
             - "80:80"
         depends_on:
-            - postgres
+            - "postgres"
 
     postgres:
-        image: postgres
+        image: "postgres"
         environment:
-            POSTGRES_PASSWORD: password
+            POSTGRES_PASSWORD: "password"

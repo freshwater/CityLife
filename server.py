@@ -5,6 +5,9 @@ import json
 import psycopg2
 
 class Server(http.server.BaseHTTPRequestHandler):
+    with open('index.html') as file:
+        index_file = file.read()
+
     def do_POST(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/json')
@@ -18,8 +21,8 @@ class Server(http.server.BaseHTTPRequestHandler):
         print(json.dumps(request).encode()[:800])
 
         response = {
-                'AllCorrect': 'True',
-                'Response': {}
+            'AllCorrect': 'True',
+            'Response': {}
         }
 
         self.wfile.write(json.dumps(response).encode())
@@ -29,14 +32,7 @@ class Server(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-        response = """
-<!DOCTYPE html>
-<html>
-<body>
-    <b>yo!</b>
-</body>
-</html>
-"""
+        response = Server.index_file
 
         self.wfile.write(response.encode())
 

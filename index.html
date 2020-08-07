@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Quick Start - Leaflet</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+
+            margin: 0px;
+        }
+
+        #search-container {
+            position: fixed;
+            left: 0px;
+            right: 0px;
+            top: 0px;
+
+            z-index: 400;
+            height: 60px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #search-field {
+            width: 300px;
+            height: 26px;
+
+            background-color: #fffffffd;
+            font-size: 1em;
+            padding-left: 5px;
+            padding-right: 5px;
+
+            border-radius: 5px;
+            border-width: 1px;
+            -webkit-appearance: none;
+            /*box-shadow: inset 0.2px 0.2px 2px rgba(0,0,0,0.6);*/
+        }
+    </style>
+	
+</head>
+<body>
+
+
+
+<div id="map"></div>
+<span id="search-container"><input id="search-field" type="text" onkeyup="query(this.value)"></span>
+<script>
+
+    function query(queryText) {
+        fetch('.', {
+            method: 'POST',
+            body: JSON.stringify({'QueryText': queryText})
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result)  {
+            console.log(result);
+        });
+    }
+
+    mymap = L.map('map', {
+        'zoomSnap': 0.1,
+    });
+
+    mymap.setView([42, 10], 2.6)
+
+	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+		maxZoom: 18,
+		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+			'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+		id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        detectRetina: true
+	}).addTo(mymap);
+
+</script>
+
+
+</body>
+</html>
+

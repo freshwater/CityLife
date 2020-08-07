@@ -14,6 +14,7 @@ RUN pip install psycopg2-binary
 # RUN python3 -c "from dateutil import tz"
 
 COPY server.py .
+COPY index.html .
 
 ENTRYPOINT ["/bin/bash", "-c", "python3 -u server.py"]
 
