@@ -2,11 +2,22 @@
 import http.server
 
 import json
+import time
 import psycopg2
 
 class Server(http.server.BaseHTTPRequestHandler):
     with open('index.html') as file:
         index_file = file.read()
+
+    with open('/database/coordinates_master_list.json', 'r') as file:
+        t0 = time.time()
+        coordinates_master_list = json.loads(file.read())
+        print(f'Coordinates load time: {time.time() - t0:.1f}')
+
+    with open('/database/master_index.json', 'r') as file:
+        t0 = time.time()
+        master_index = {key: set(value) for key, value in json.loads(file.read()).items()}
+        print(f'Index load time: {time.time() - t0:.1f}')
 
     def do_POST(self):
         self.send_response(200)
@@ -20,10 +31,27 @@ class Server(http.server.BaseHTTPRequestHandler):
         print("Request")
         print(json.dumps(request).encode()[:800])
 
+        query_text = request['QueryText']
+        
+        t0 = time.time()
+
+        coordinate_index_sets = [Server.master_index.get(word, set()) for word in query_text.split()]
+        # print(sum(map(len, coordinate_index_sets)))
+
+        import functools
+        coordinate_indices = functools.reduce(set.intersection, coordinate_index_sets)
+        # print(len(coordinate_indices))
+
+        coordinates = [Server.coordinates_master_list[index] for index in coordinate_indices]
+
         response = {
             'AllCorrect': 'True',
-            'Response': {}
+            'Response': {
+                'Coordinates': coordinates
+            }
         }
+
+        print(f'QueryTime: {time.time() - t0}')
 
         self.wfile.write(json.dumps(response).encode())
 

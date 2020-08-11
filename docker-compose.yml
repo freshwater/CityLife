@@ -1,9 +1,13 @@
 
-version: "3"
+version: "3.2"
 
 services:
     interface:
         build: .
+        volumes:
+            - type: bind
+              source: ./database
+              target: /database
         ports:
             - "80:80"
         depends_on:

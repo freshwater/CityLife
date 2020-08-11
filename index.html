@@ -58,6 +58,8 @@
 <span id="search-container"><input id="search-field" type="text" onkeyup="query(this.value)"></span>
 <script>
 
+    var activeLayer = null;
+
     function query(queryText) {
         fetch('.', {
             method: 'POST',
@@ -65,15 +67,35 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(result)  {
-            console.log(result);
+            var coordinates = result['Response']['Coordinates'];
+            console.log(coordinates);
+
+            var t0 = Date.now();
+
+            var markers = coordinates .map (function(coordinate) {
+                return L.circle(coordinate, {
+                    color: 'red',
+                    opacity: 0.5,
+                    radius: 500
+                });
+            });
+
+            if (activeLayer) {
+                mapObject.removeLayer(activeLayer);
+            }
+
+            activeLayer = L.layerGroup(markers)
+            mapObject.addLayer(activeLayer);
+
+            console.log("Timing:", (Date.now() - t0) / 1000);
         });
     }
 
-    mymap = L.map('map', {
+    mapObject = L.map('map', {
         'zoomSnap': 0.1,
     });
 
-    mymap.setView([42, 10], 2.6)
+    mapObject.setView([42, 10], 2.6);
 
 	L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
 		maxZoom: 18,
@@ -84,10 +106,9 @@
         tileSize: 512,
         zoomOffset: -1,
         detectRetina: true
-	}).addTo(mymap);
+	}).addTo(mapObject);
 
 </script>
-
 
 </body>
 </html>

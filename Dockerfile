@@ -16,6 +16,6 @@ RUN pip install psycopg2-binary
 COPY server.py .
 COPY index.html .
 
-ENTRYPOINT ["/bin/bash", "-c", "python3 -u server.py"]
+VOLUME /database
 
-# =======
+ENTRYPOINT ["/bin/bash", "-c", "python3 -u server.py"]
