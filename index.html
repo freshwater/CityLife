@@ -47,6 +47,25 @@
             -webkit-appearance: none;
             /*box-shadow: inset 0.2px 0.2px 2px rgba(0,0,0,0.6);*/
         }
+
+        #article-container {
+            position: fixed;
+            right: 0px;
+            top: 0px;
+            bottom: 0px;
+
+            width: 40%;
+            resize: block;
+
+            z-index: 500;
+
+            color: orange;
+        }
+
+        #article-container iframe {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 	
 </head>
@@ -56,11 +75,14 @@
 
 <div id="map"></div>
 <span id="search-container"><input id="search-field" type="text" onkeyup="query(this.value)"></span>
+<div id="article-container"><iframe id="article-iframe" sandbox="allow-scripts allow-same-origin"></iframe></div>
 <script>
 
     var activeLayer = null;
 
     function query(queryText) {
+        var iframe = document.getElementById('article-iframe');
+
         fetch('.', {
             method: 'POST',
             body: JSON.stringify({'QueryText': queryText})
@@ -68,15 +90,29 @@
         .then(function(response) { return response.json(); })
         .then(function(result)  {
             var coordinates = result['Response']['Coordinates'];
-            console.log(coordinates);
+            var coordinateTitlePairs = result['Response']['CoordinateTitlePairs'];
+            console.log("COORDINATES_TITLES", coordinateTitlePairs);
 
             var t0 = Date.now();
 
-            var markers = coordinates .map (function(coordinate) {
+            var markers = coordinateTitlePairs .map (function([coordinate, title]) {
+                var title = '' + title;
+
                 return L.circle(coordinate, {
-                    color: 'red',
-                    opacity: 0.5,
-                    radius: 500
+                    stroke: false,
+                    fillColor: 'red',
+                    fillOpacity: 0.8,
+                    radius: 20000
+                }).on({
+                    click: function(e) { iframe.setAttribute('src', 'https://en.m.wikipedia.org/wiki/' + title); },
+                    mouseover: function(e) {
+                        /*L.popup()
+                           .setLatLng(coordinate)
+                           .setContent('<p>Hello world!<br />This is a nice popup.</p>')
+                           .openOn(mapObject);*/
+
+                        e.target.bindTooltip(title).openTooltip();
+                    }
                 });
             });
 

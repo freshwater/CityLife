@@ -7,17 +7,32 @@ import psycopg2
 
 class Server(http.server.BaseHTTPRequestHandler):
     with open('index.html') as file:
-        index_file = file.read()
+        html_index_file = file.read()
 
-    with open('/database/coordinates_master_list.json', 'r') as file:
+    with open('/database/coordinates_word_index.json', 'r') as file:
         t0 = time.time()
-        coordinates_master_list = json.loads(file.read())
+        coordinates_word_index = {key: set(value) for key, value in json.loads(file.read()).items()}
+        print(f'Coordinates index load time: {time.time() - t0:.1f}')
+
+    with open('/database/titles_word_index.json', 'r') as file:
+        t0 = time.time()
+        titles_word_index = {key: set(value) for key, value in json.loads(file.read()).items()}
+        print(f'Titles index load time: {time.time() - t0:.1f}')
+
+    with open('/database/coordinates_list.json', 'r') as file:
+        t0 = time.time()
+        coordinates_list = json.loads(file.read())
         print(f'Coordinates load time: {time.time() - t0:.1f}')
 
-    with open('/database/master_index.json', 'r') as file:
+    with open('/database/article_titles_array.json', 'r') as file:
         t0 = time.time()
-        master_index = {key: set(value) for key, value in json.loads(file.read()).items()}
-        print(f'Index load time: {time.time() - t0:.1f}')
+        article_titles_list = json.loads(file.read())
+        print(f'Titles load time: {time.time() - t0:.1f}')
+
+    with open('/database/coordinates_articles_index_array.json', 'r') as file:
+        t0 = time.time()
+        coordinates_articles_index = json.loads(file.read())
+        print(f'Coordinate-Articles index load time: {time.time() - t0:.1f}')
 
     def do_POST(self):
         self.send_response(200)
@@ -35,19 +50,33 @@ class Server(http.server.BaseHTTPRequestHandler):
         
         t0 = time.time()
 
-        coordinate_index_sets = [Server.master_index.get(word, set()) for word in query_text.split()]
-        # print(sum(map(len, coordinate_index_sets)))
-
         import functools
+        coordinate_index_sets = [Server.coordinates_word_index.get(word, set()) for word in query_text.split()] or [set()]
         coordinate_indices = functools.reduce(set.intersection, coordinate_index_sets)
-        # print(len(coordinate_indices))
+        # coordinates = [Server.coordinates_list[index] for index in coordinate_indices]
 
-        coordinates = [Server.coordinates_master_list[index] for index in coordinate_indices]
+        title_index_sets = [Server.titles_word_index.get(word, set()) for word in query_text.split()] or [set()]
+        title_indices = functools.reduce(set.intersection, title_index_sets)
+        # titles = [Server.article_titles_list[index] for index in title_indices]
+
+        # each coordinate can have multiple associated articles
+        coordinate_title_pairs = []
+        for coordinate_index in coordinate_indices:
+            coordinate = Server.coordinates_list[coordinate_index]
+            article_indices = Server.coordinates_articles_index[coordinate_index]
+
+            # attach to coordinate only those titles whose articles match search criteria
+            article_indices = [index for index in article_indices if index in title_indices]
+            article_titles = [Server.article_titles_list[index] for index in article_indices]
+
+            coordinate_title_pairs.append((coordinate, article_titles))
 
         response = {
             'AllCorrect': 'True',
             'Response': {
-                'Coordinates': coordinates
+                # 'Coordinates': coordinates,
+                # 'ArticleTitles': titles,
+                'CoordinateTitlePairs': coordinate_title_pairs
             }
         }
 
@@ -60,7 +89,7 @@ class Server(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-        response = Server.index_file
+        response = Server.html_index_file
 
         self.wfile.write(response.encode())
 
